@@ -1,4 +1,3 @@
-Вот оформленная и структурированная версия README.md — готова для GitHub или публикации в Extension Warehouse для SketchUp.
 
 ---
 
