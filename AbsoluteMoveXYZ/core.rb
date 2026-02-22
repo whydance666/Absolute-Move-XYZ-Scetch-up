@@ -1,6 +1,9 @@
+# frozen_string_literal: true
+
 module AbsoluteMoveXYZ
   PLUGIN_NAME = "AbsoluteMoveXYZ"
 
+  # Создаём HTML блок для каждой оси
   def self.axis_block(axis)
     <<-HTML
       <label>#{axis}:</label>
@@ -13,6 +16,7 @@ module AbsoluteMoveXYZ
     HTML
   end
 
+  # Создание диалога
   def self.create_dialog
     @dialog = UI::HtmlDialog.new(
       dialog_title: PLUGIN_NAME,
@@ -64,13 +68,32 @@ module AbsoluteMoveXYZ
     end
   end
 
+  # Запуск диалога
   def self.run
     create_dialog
     @dialog.show
   end
 
+  # Метод перемещения выбранных объектов
   def self.apply_move(data)
-    # Тут твоя логика перемещения объектов
-    puts "Applying move: #{data}"
+    model = Sketchup.active_model
+    selection = model.selection
+    return if selection.empty?
+
+    x = data["x"].to_f
+    y = data["y"].to_f
+    z = data["z"].to_f
+    target = Geom::Point3d.new(x, y, z)
+
+    model.start_operation("Move to Absolute XYZ", true)
+
+    selection.each do |entity|
+      bb = entity.bounds
+      origin = bb.min
+      vector = target - origin
+      entity.transform!(Geom::Transformation.translation(vector))
+    end
+
+    model.commit_operation
   end
 end

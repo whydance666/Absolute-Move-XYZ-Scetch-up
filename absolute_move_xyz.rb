@@ -15,7 +15,6 @@ module AbsoluteMoveXYZ
 
     Sketchup.register_extension(extension, true)
 
-    # Меню и тулбар
     UI.menu("Extensions").add_item(EXTENSION_NAME) { AbsoluteMoveXYZ.run }
 
     toolbar = UI::Toolbar.new(EXTENSION_NAME)
