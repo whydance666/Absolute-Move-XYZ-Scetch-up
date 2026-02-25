@@ -1,7 +1,13 @@
-# frozen_string_literal: true
-
 module AbsoluteMoveXYZ
   PLUGIN_NAME = "Absolute Move XYZ"
+  GITHUB_URL  = "https://github.com/whydance666"
+
+  # Тема сохраняется между открытиями диалога в рамках сессии SketchUp
+  @current_theme = :dark
+
+  def self.current_theme
+    @current_theme
+  end
 
   def self.unit_ratio
     options   = Sketchup.active_model.options["UnitsOptions"]
@@ -38,6 +44,14 @@ module AbsoluteMoveXYZ
     HTML
   end
 
+  def self.footer_html
+    <<-HTML
+      <div class="footer">
+        made by <a href="#" onclick="window.sketchup.openUrl('#{GITHUB_URL}'); return false;">@whydance666</a>
+      </div>
+    HTML
+  end
+
   def self.create_dialog
     return @dialog if @dialog
 
@@ -47,7 +61,7 @@ module AbsoluteMoveXYZ
       scrollable: false,
       resizable: false,
       width: 380,
-      height: 290,
+      height: 338,
       style: UI::HtmlDialog::STYLE_DIALOG
     )
 
@@ -57,43 +71,264 @@ module AbsoluteMoveXYZ
       <head>
       <meta charset="utf-8">
       <style>
-        body {
-          font-family: sans-serif;
-          font-size: 13px;
-          padding: 14px;
-          margin: 0;
-          background: #f5f5f5;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ── Тёмная тема ── */
+        body.dark {
+          --bg:            #1e1e1e;
+          --bg-input:      #2d2d2d;
+          --border:        #3e3e3e;
+          --divider:       #3a3a3a;
+          --text:          #d4d4d4;
+          --text-head:     #cccccc;
+          --text-axis:     #9cdcfe;
+          --text-muted:    #555555;
+          --btn-apply-bg:  #2d2d2d;
+          --btn-apply-hv:  #3a3a3a;
+          --btn-ok-bg:     #007acc;
+          --btn-ok-hv:     #1a8ad4;
+          --status-ok:     #6a9955;
+          --status-err:    #f44747;
+          --link:          #4e7fa8;
+          --link-hv:       #7ab8f0;
         }
-        h3 { margin: 0 0 12px; font-size: 14px; }
+
+        /* ── Светлая тема ── */
+        body.light {
+          --bg:            #f5f5f5;
+          --bg-input:      #ffffff;
+          --border:        #cccccc;
+          --divider:       #dddddd;
+          --text:          #1e1e1e;
+          --text-head:     #333333;
+          --text-axis:     #0066aa;
+          --text-muted:    #999999;
+          --btn-apply-bg:  #ececec;
+          --btn-apply-hv:  #e0e0e0;
+          --btn-ok-bg:     #007acc;
+          --btn-ok-hv:     #1a8ad4;
+          --status-ok:     #3a7a3a;
+          --status-err:    #cc0000;
+          --link:          #0066aa;
+          --link-hv:       #004488;
+        }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          font-size: 13px;
+          padding: 16px;
+          background: var(--bg);
+          color: var(--text);
+          transition: background 0.2s, color 0.2s;
+        }
+
+        /* ── Шапка ── */
+        .header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 14px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--divider);
+        }
+
+        h3 {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-head);
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        /* ── Кнопка переключения темы ── */
+        .theme-btn {
+          width: 28px;
+          height: 22px;
+          padding: 0;
+          font-size: 14px;
+          line-height: 1;
+          background: var(--bg-input);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 0.15s, border-color 0.15s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .theme-btn:hover  { background: var(--btn-apply-hv); }
+        .theme-btn:active { transform: scale(0.95); }
+
+        /* ── Строки полей ── */
         .row {
           display: flex;
           align-items: center;
           gap: 6px;
           margin-bottom: 8px;
         }
-        .axis-label     { width: 16px; font-weight: bold; flex-shrink: 0; }
-        .num-input      { width: 75px; padding: 3px 4px; box-sizing: border-box; flex-shrink: 0; }
-        .mode-select-sm { width: 48px; padding: 3px 2px; flex-shrink: 0; }
-        .mode-select    { flex: 1; padding: 3px 4px; }
-        .buttons        { display: flex; gap: 10px; margin-top: 14px; }
-        button          { flex: 1; height: 36px; font-size: 13px; cursor: pointer; }
-        #status         { margin-top: 8px; font-size: 11px; color: #666; min-height: 14px; }
+
+        .axis-label {
+          width: 14px;
+          font-weight: 700;
+          font-size: 12px;
+          flex-shrink: 0;
+          color: var(--text-axis);
+        }
+
+        .num-input {
+          width: 75px;
+          padding: 4px 6px;
+          flex-shrink: 0;
+          background: var(--bg-input);
+          border: 1px solid var(--border);
+          border-radius: 3px;
+          color: var(--text);
+          font-size: 13px;
+          outline: none;
+          transition: border-color 0.15s, background 0.2s;
+        }
+
+        .num-input:focus { border-color: #007acc; }
+
+        .mode-select-sm {
+          width: 50px;
+          flex-shrink: 0;
+          padding: 4px 3px;
+          background: var(--bg-input);
+          border: 1px solid var(--border);
+          border-radius: 3px;
+          color: var(--text);
+          font-size: 12px;
+          outline: none;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .mode-select {
+          flex: 1;
+          padding: 4px 6px;
+          background: var(--bg-input);
+          border: 1px solid var(--border);
+          border-radius: 3px;
+          color: var(--text);
+          font-size: 13px;
+          outline: none;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        select:focus { border-color: #007acc; }
+
+        .divider {
+          height: 1px;
+          background: var(--divider);
+          margin: 10px 0;
+        }
+
+        /* ── Кнопки Apply / OK ── */
+        .buttons { display: flex; gap: 8px; margin-top: 12px; }
+
+        button {
+          flex: 1;
+          height: 34px;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          border: none;
+          border-radius: 3px;
+          transition: background 0.15s, transform 0.1s;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        .btn-apply {
+          background: var(--btn-apply-bg);
+          color: var(--text);
+          border: 1px solid var(--border);
+        }
+
+        .btn-apply:hover { background: var(--btn-apply-hv); }
+
+        .btn-ok {
+          background: var(--btn-ok-bg);
+          color: #ffffff;
+          border: 1px solid var(--btn-ok-bg);
+        }
+
+        .btn-ok:hover { background: var(--btn-ok-hv); }
+
+        /* ── Статус ── */
+        #status {
+          margin-top: 10px;
+          font-size: 11px;
+          color: var(--status-ok);
+          min-height: 14px;
+          text-align: center;
+          transition: color 0.15s;
+        }
+
+        #status.error { color: var(--status-err); }
+
+        /* ── Футер ── */
+        .footer {
+          margin-top: 10px;
+          padding-top: 8px;
+          border-top: 1px solid var(--divider);
+          text-align: center;
+          font-size: 10px;
+          color: var(--text-muted);
+        }
+
+        .footer a {
+          color: var(--link);
+          text-decoration: none;
+          transition: color 0.15s;
+        }
+
+        .footer a:hover { color: var(--link-hv); }
       </style>
       </head>
-      <body>
-        <h3>Absolute Coordinates</h3>
+      <body class="#{@current_theme}">
+
+        <div class="header">
+          <h3>Absolute Coordinates</h3>
+          <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+            #{@current_theme == :dark ? "☀️" : "🌙"}
+          </button>
+        </div>
 
         #{axis_block("X", [["left", "Left"], ["center", "Center"], ["right", "Right"]])}
         #{axis_block("Y", [["front", "Front"], ["center", "Center"], ["rear", "Rear"]])}
         #{axis_block("Z", [["bottom", "Bottom"], ["center", "Center"], ["top", "Top"]])}
 
+        <div class="divider"></div>
+
         <div class="buttons">
-          <button onclick="applyData(false)">Apply</button>
-          <button onclick="applyData(true)">OK</button>
+          <button class="btn-apply" onclick="applyData(false)">Apply</button>
+          <button class="btn-ok"    onclick="applyData(true)">OK</button>
         </div>
+
         <div id="status"></div>
 
+        #{footer_html}
+
         <script>
+          function toggleTheme() {
+            const body = document.body;
+            const btn  = document.getElementById("theme-btn");
+            if (body.classList.contains("dark")) {
+              body.classList.replace("dark", "light");
+              btn.textContent = "🌙";
+              window.sketchup.saveTheme("light");
+            } else {
+              body.classList.replace("light", "dark");
+              btn.textContent = "☀️";
+              window.sketchup.saveTheme("dark");
+            }
+          }
+
           function applyData(closeDialog) {
             const data = {
               x:        document.getElementById("x_value").value,
@@ -107,18 +342,22 @@ module AbsoluteMoveXYZ
               z_anchor: document.getElementById("z_anchor").value,
               close:    closeDialog
             };
-            document.getElementById("status").textContent = "Applying...";
+            const status = document.getElementById("status");
+            status.className = "";
+            status.textContent = "Applying...";
             window.sketchup.apply(JSON.stringify(data));
           }
 
           function onSuccess(msg) {
-            document.getElementById("status").style.color = "#666";
-            document.getElementById("status").textContent = msg;
+            const status = document.getElementById("status");
+            status.className = "";
+            status.textContent = msg;
           }
 
           function onError(msg) {
-            document.getElementById("status").style.color = "#c00";
-            document.getElementById("status").textContent = "Error: " + msg;
+            const status = document.getElementById("status");
+            status.className = "error";
+            status.textContent = "Error: " + msg;
           }
         </script>
       </body>
@@ -136,6 +375,16 @@ module AbsoluteMoveXYZ
       rescue => e
         @dialog.execute_script("onError(#{e.message.to_json})")
       end
+    end
+
+    # Сохраняем выбранную тему — запомнится до закрытия SketchUp
+    @dialog.add_action_callback("saveTheme") do |_, theme|
+      @current_theme = theme.to_sym
+    end
+
+    # Открываем ссылку в нативном браузере системы
+    @dialog.add_action_callback("openUrl") do |_, url|
+      UI.openURL(url)
     end
 
     @dialog.add_action_callback("closeDialog") { |_| @dialog.close }
