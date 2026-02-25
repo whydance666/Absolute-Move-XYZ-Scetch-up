@@ -23,6 +23,11 @@ module AbsoluteMoveXYZ
     end
   end
 
+  # ФИКС: принимает и точку и запятую как десятичный разделитель
+  def self.parse_float(str)
+    str.to_s.strip.gsub(",", ".").to_f
+  end
+
   def self.axis_block(axis, anchors)
     options_html = anchors.map do |val, label|
       selected = val == anchors[anchors.size / 2][0] ? " selected" : ""
@@ -32,7 +37,7 @@ module AbsoluteMoveXYZ
     <<-HTML
       <div class="row">
         <label class="axis-label">#{axis}:</label>
-        <input type="number" id="#{axis.downcase}_value" value="0" step="any" class="num-input">
+        <input type="text" id="#{axis.downcase}_value" value="0" class="num-input" autocomplete="off">
         <select id="#{axis.downcase}_mode" class="mode-select-sm">
           <option value="absolute" selected>Abs</option>
           <option value="relative">Rel</option>
@@ -192,6 +197,11 @@ module AbsoluteMoveXYZ
 
         .num-input:focus { border-color: #007acc; }
 
+        /* Подсветка невалидного ввода */
+        .num-input.invalid {
+          border-color: var(--status-err);
+        }
+
         .mode-select-sm {
           width: 50px;
           flex-shrink: 0;
@@ -315,6 +325,19 @@ module AbsoluteMoveXYZ
         #{footer_html}
 
         <script>
+          // ФИКС: нормализуем значение — заменяем запятую на точку
+          function getValue(id) {
+            const el  = document.getElementById(id);
+            const val = el.value.trim().replace(",", ".");
+            const num = parseFloat(val);
+            if (val !== "" && isNaN(num)) {
+              el.classList.add("invalid");
+              return null;
+            }
+            el.classList.remove("invalid");
+            return isNaN(num) ? "0" : String(num);
+          }
+
           function toggleTheme() {
             const body = document.body;
             const btn  = document.getElementById("theme-btn");
@@ -330,19 +353,32 @@ module AbsoluteMoveXYZ
           }
 
           function applyData(closeDialog) {
+            const status = document.getElementById("status");
+
+            const x = getValue("x_value");
+            const y = getValue("y_value");
+            const z = getValue("z_value");
+
+            // Если хоть одно поле невалидно — останавливаемся
+            if (x === null || y === null || z === null) {
+              status.className = "error";
+              status.textContent = "Invalid number format.";
+              return;
+            }
+
             const data = {
-              x:        document.getElementById("x_value").value,
+              x:        x,
               x_mode:   document.getElementById("x_mode").value,
               x_anchor: document.getElementById("x_anchor").value,
-              y:        document.getElementById("y_value").value,
+              y:        y,
               y_mode:   document.getElementById("y_mode").value,
               y_anchor: document.getElementById("y_anchor").value,
-              z:        document.getElementById("z_value").value,
+              z:        z,
               z_mode:   document.getElementById("z_mode").value,
               z_anchor: document.getElementById("z_anchor").value,
               close:    closeDialog
             };
-            const status = document.getElementById("status");
+
             status.className = "";
             status.textContent = "Applying...";
             window.sketchup.apply(JSON.stringify(data));
@@ -377,12 +413,10 @@ module AbsoluteMoveXYZ
       end
     end
 
-    # Сохраняем выбранную тему — запомнится до закрытия SketchUp
     @dialog.add_action_callback("saveTheme") do |_, theme|
       @current_theme = theme.to_sym
     end
 
-    # Открываем ссылку в нативном браузере системы
     @dialog.add_action_callback("openUrl") do |_, url|
       UI.openURL(url)
     end
@@ -436,9 +470,11 @@ module AbsoluteMoveXYZ
     return if selection.empty?
 
     ratio = unit_ratio
-    x     = data["x"].to_f * ratio
-    y     = data["y"].to_f * ratio
-    z     = data["z"].to_f * ratio
+
+    # ФИКС: parse_float корректно обрабатывает и точку и запятую
+    x = parse_float(data["x"]) * ratio
+    y = parse_float(data["y"]) * ratio
+    z = parse_float(data["z"]) * ratio
 
     x_relative = data["x_mode"] == "relative"
     y_relative = data["y_mode"] == "relative"
