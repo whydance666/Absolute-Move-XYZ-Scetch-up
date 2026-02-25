@@ -149,7 +149,6 @@ module AbsoluteMoveXYZ
     dlg.visible? ? dlg.bring_to_front : dlg.show
   end
 
-  # Фильтр: только верхнеуровневые объекты (без вложенных)
   def self.filter_top_level(entities)
     require 'set'
     entity_set = entities.to_set
@@ -186,26 +185,24 @@ module AbsoluteMoveXYZ
 
         bb = entity.bounds
 
-        origin = if entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
-                   entity.transformation.origin
-                 else
-                   bb.center
-                 end
-
-        z_offset = case anchor
-                   when "bottom" then bb.min.z - origin.z
-                   when "top"    then bb.max.z - origin.z
-                   else 0.0
+        # Точка привязки берётся из bounds — единая система для всех осей
+        anchor_x = (bb.min.x + bb.max.x) / 2.0
+        anchor_y = (bb.min.y + bb.max.y) / 2.0
+        anchor_z = case anchor
+                   when "bottom" then bb.min.z
+                   when "top"    then bb.max.z
+                   else               (bb.min.z + bb.max.z) / 2.0
                    end
 
-        target_point = Geom::Point3d.new(
-          x_relative ? origin.x + x : x,
-          y_relative ? origin.y + y : y,
-          z_relative ? origin.z + z : z - z_offset
-        )
+        target_x = x_relative ? anchor_x + x : x
+        target_y = y_relative ? anchor_y + y : y
+        target_z = z_relative ? anchor_z + z : z
 
-        vector = target_point - origin
-        entity.transform!(Geom::Transformation.translation(vector))
+        dx = target_x - anchor_x
+        dy = target_y - anchor_y
+        dz = target_z - anchor_z
+
+        entity.transform!(Geom::Transformation.translation([dx, dy, dz]))
       end
 
       model.commit_operation
@@ -216,7 +213,6 @@ module AbsoluteMoveXYZ
     end
   end
 
-  # Тулбар и меню — создаём ЗДЕСЬ, в core.rb, один раз
   unless file_loaded?(__FILE__)
     UI.menu("Extensions").add_item(PLUGIN_NAME) { AbsoluteMoveXYZ.run }
 
