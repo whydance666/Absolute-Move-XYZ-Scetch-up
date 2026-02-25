@@ -726,5 +726,3 @@ module AbsoluteMoveXYZ
   end
 
 end
-
-#with love by whydance&Mike_iLeech
