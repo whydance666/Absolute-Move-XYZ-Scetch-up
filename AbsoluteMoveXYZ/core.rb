@@ -1,178 +1,233 @@
 module AbsoluteMoveXYZ
-
   PLUGIN_NAME = "Absolute Move XYZ"
 
-  # -----------------------------
-  # MAIN EXECUTION
-  # -----------------------------
+  def self.unit_ratio
+    options   = Sketchup.active_model.options["UnitsOptions"]
+    unit_type = options["LengthUnit"]
 
-  def self.run
-    create_dialog unless @dialog
-    @dialog.show
+    case unit_type
+    when 0 then 1.0
+    when 1 then 12.0
+    when 2 then 1.0 / 25.4
+    when 3 then 1.0 / 2.54
+    when 4 then 39.3701
+    else        1.0
+    end
   end
 
-  # -----------------------------
-  # DIALOG
-  # -----------------------------
+  def self.axis_block(axis)
+    <<-HTML
+      <div class="row">
+        <label class="axis-label">#{axis}:</label>
+        <input type="number" id="#{axis.downcase}_value" value="0" step="any" class="num-input">
+        <select id="#{axis.downcase}_mode" class="mode-select">
+          <option value="absolute" selected>Absolute</option>
+          <option value="relative">Relative</option>
+        </select>
+      </div>
+    HTML
+  end
+
+  def self.anchor_block
+    <<-HTML
+      <div class="row">
+        <label class="axis-label">Anchor:</label>
+        <select id="anchor" class="mode-select" style="flex:1;">
+          <option value="bottom">Bottom</option>
+          <option value="center" selected>Center</option>
+          <option value="top">Top</option>
+        </select>
+      </div>
+    HTML
+  end
 
   def self.create_dialog
-    @dialog = UI::HtmlDialog.new({
+    return @dialog if @dialog
+
+    @dialog = UI::HtmlDialog.new(
       dialog_title: PLUGIN_NAME,
       preferences_key: "AbsoluteMoveXYZ",
       scrollable: false,
       resizable: false,
-      width: 420,
-      height: 380,
+      width: 340,
+      height: 310,
       style: UI::HtmlDialog::STYLE_DIALOG
-    })
+    )
 
     html = <<-HTML
-    <!DOCTYPE html>
-    <html>
-    <body style="font-family:sans-serif;padding:15px;">
-      <h3>Absolute Coordinates</h3>
-
-      #{axis_block("X")}
-      #{axis_block("Y")}
-      #{axis_block("Z")}
-
-      <br>
-      <button onclick="sendData()" style="width:100%;height:40px;">
-        Apply
-      </button>
-
-      <script>
-        function sendData(){
-          const data = {
-            x: document.getElementById("x_value").value,
-            x_mode: document.getElementById("x_mode").value,
-            y: document.getElementById("y_value").value,
-            y_mode: document.getElementById("y_mode").value,
-            z: document.getElementById("z_value").value,
-            z_mode: document.getElementById("z_mode").value
-          };
-          sketchup.apply(JSON.stringify(data));
+      <!DOCTYPE html>
+      <html>
+      <head>
+      <meta charset="utf-8">
+      <style>
+        body {
+          font-family: sans-serif;
+          font-size: 13px;
+          padding: 14px;
+          margin: 0;
+          background: #f5f5f5;
         }
-      </script>
-    </body>
-    </html>
+        h3 { margin: 0 0 12px; font-size: 14px; }
+        .row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 8px;
+        }
+        .axis-label  { width: 16px; font-weight: bold; flex-shrink: 0; }
+        .num-input   { width: 80px; padding: 3px 4px; box-sizing: border-box; }
+        .mode-select { flex: 1; padding: 3px 4px; }
+        .buttons     { display: flex; gap: 10px; margin-top: 14px; }
+        button       { flex: 1; height: 36px; font-size: 13px; cursor: pointer; }
+        #status      { margin-top: 8px; font-size: 11px; color: #666; min-height: 14px; }
+      </style>
+      </head>
+      <body>
+        <h3>Absolute Coordinates</h3>
+        #{axis_block("X")}
+        #{axis_block("Y")}
+        #{axis_block("Z")}
+        #{anchor_block}
+
+        <div class="buttons">
+          <button onclick="applyData(false)">Apply</button>
+          <button onclick="applyData(true)">OK</button>
+        </div>
+        <div id="status"></div>
+
+        <script>
+          function applyData(closeDialog) {
+            const data = {
+              x:      document.getElementById("x_value").value,
+              x_mode: document.getElementById("x_mode").value,
+              y:      document.getElementById("y_value").value,
+              y_mode: document.getElementById("y_mode").value,
+              z:      document.getElementById("z_value").value,
+              z_mode: document.getElementById("z_mode").value,
+              anchor: document.getElementById("anchor").value,
+              close:  closeDialog
+            };
+            document.getElementById("status").textContent = "Applying...";
+            window.sketchup.apply(JSON.stringify(data));
+          }
+
+          function onSuccess(msg) {
+            document.getElementById("status").style.color = "#666";
+            document.getElementById("status").textContent = msg;
+          }
+
+          function onError(msg) {
+            document.getElementById("status").style.color = "#c00";
+            document.getElementById("status").textContent = "Error: " + msg;
+          }
+        </script>
+      </body>
+      </html>
     HTML
 
     @dialog.set_html(html)
 
     @dialog.add_action_callback("apply") do |_, json|
-      apply_move(JSON.parse(json))
-    end
-  end
-
-  # -----------------------------
-  # AXIS UI BLOCK
-  # -----------------------------
-
-  def self.axis_block(axis)
-    axis_down = axis.downcase
-    <<-HTML
-    <fieldset style="margin-bottom:10px;">
-      <legend>Axis #{axis}</legend>
-      <input id="#{axis_down}_value" placeholder="Absolute value (blank = ignore)" style="width:100%;margin-bottom:5px;">
-      <select id="#{axis_down}_mode" style="width:100%;">
-        <option value="min">Min</option>
-        <option value="center">Center</option>
-        <option value="max">Max</option>
-      </select>
-    </fieldset>
-    HTML
-  end
-
-  # -----------------------------
-  # APPLY LOGIC
-  # -----------------------------
-
-  def self.apply_move(data)
-    model = Sketchup.active_model
-    sel   = model.selection
-
-    if sel.empty?
-      UI.messagebox("Selection is empty.")
-      return
+      begin
+        params = JSON.parse(json)
+        apply_move(params)
+        @dialog.execute_script("onSuccess('Done.')")
+        @dialog.close if params["close"]
+      rescue => e
+        @dialog.execute_script("onError(#{e.message.to_json})")
+      end
     end
 
-    tx = data["x"].strip.empty? ? nil : data["x"].to_l
-    ty = data["y"].strip.empty? ? nil : data["y"].to_l
-    tz = data["z"].strip.empty? ? nil : data["z"].to_l
+    @dialog.add_action_callback("closeDialog") { |_| @dialog.close }
+    @dialog.set_on_closed { @dialog = nil }
 
-    # ФИКС: фильтруем только верхнеуровневые сущности,
-    # чтобы исключить двойное перемещение дочерних объектов
-    top_level_entities = filter_top_level(sel.to_a)
-
-    model.start_operation("Absolute Move XYZ", true)
-
-    top_level_entities.each do |e|
-      next unless e.respond_to?(:bounds)
-      next if e.locked?
-      # ФИКС: пропускаем голую геометрию (Face/Edge) — она не имеет
-      # самостоятельной трансформации и должна двигаться через родителя
-      next if e.is_a?(Sketchup::Face) || e.is_a?(Sketchup::Edge)
-
-      bounds = e.bounds
-
-      dx = compute_delta(tx, data["x_mode"], bounds, :x)
-      dy = compute_delta(ty, data["y_mode"], bounds, :y)
-      dz = compute_delta(tz, data["z_mode"], bounds, :z)
-
-      translation = Geom::Transformation.translation([dx, dy, dz])
-      e.transform!(translation)
-    end
-
-    model.commit_operation
+    @dialog
   end
 
-  # ФИКС: возвращает только те entities, чей родитель НЕ входит в selection.
-  # Это предотвращает двойное перемещение вложенных объектов.
+  def self.run
+    dlg = create_dialog
+    dlg.visible? ? dlg.bring_to_front : dlg.show
+  end
+
+  # Фильтр: только верхнеуровневые объекты (без вложенных)
   def self.filter_top_level(entities)
+    require 'set'
     entity_set = entities.to_set
-
     entities.select do |e|
       parent = e.respond_to?(:parent) ? e.parent : nil
-
-      # Оставляем объект только если его непосредственный родитель
-      # не является одним из выбранных объектов
       !entity_set.include?(parent)
     end
   end
 
-  def self.compute_delta(target, mode, bounds, axis)
-    return 0 if target.nil?
+  def self.apply_move(data)
+    model     = Sketchup.active_model
+    selection = model.selection
+    return if selection.empty?
 
-    current =
-      case mode
-      when "min"
-        bounds.min.send(axis)
-      when "center"
-        bounds.center.send(axis)
-      else
-        bounds.max.send(axis)
+    ratio  = unit_ratio
+    x      = data["x"].to_f * ratio
+    y      = data["y"].to_f * ratio
+    z      = data["z"].to_f * ratio
+    anchor = data["anchor"] || "center"
+
+    x_relative = data["x_mode"] == "relative"
+    y_relative = data["y_mode"] == "relative"
+    z_relative = data["z_mode"] == "relative"
+
+    entities = filter_top_level(selection.to_a)
+
+    model.start_operation("Move to Absolute XYZ", true)
+
+    begin
+      entities.each do |entity|
+        next if entity.respond_to?(:locked?) && entity.locked?
+        next if entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge)
+        next unless entity.respond_to?(:transform!)
+
+        bb = entity.bounds
+
+        origin = if entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+                   entity.transformation.origin
+                 else
+                   bb.center
+                 end
+
+        z_offset = case anchor
+                   when "bottom" then bb.min.z - origin.z
+                   when "top"    then bb.max.z - origin.z
+                   else 0.0
+                   end
+
+        target_point = Geom::Point3d.new(
+          x_relative ? origin.x + x : x,
+          y_relative ? origin.y + y : y,
+          z_relative ? origin.z + z : z - z_offset
+        )
+
+        vector = target_point - origin
+        entity.transform!(Geom::Transformation.translation(vector))
       end
 
-    target - current
+      model.commit_operation
+
+    rescue => e
+      model.abort_operation
+      raise e
+    end
   end
 
-  # -----------------------------
-  # MENU + TOOLBAR
-  # -----------------------------
-
+  # Тулбар и меню — создаём ЗДЕСЬ, в core.rb, один раз
   unless file_loaded?(__FILE__)
-
-    UI.menu("Extensions").add_item(PLUGIN_NAME) { self.run }
+    UI.menu("Extensions").add_item(PLUGIN_NAME) { AbsoluteMoveXYZ.run }
 
     toolbar = UI::Toolbar.new(PLUGIN_NAME)
+    cmd     = UI::Command.new(PLUGIN_NAME) { AbsoluteMoveXYZ.run }
 
-    cmd = UI::Command.new(PLUGIN_NAME) { self.run }
-    cmd.tooltip = "Move object to absolute XYZ"
+    cmd.tooltip         = "Move object to absolute XYZ"
     cmd.status_bar_text = "Absolute coordinate positioning"
-    cmd.menu_text = PLUGIN_NAME
+    cmd.menu_text       = PLUGIN_NAME
 
-    icon_path = File.join(File.dirname(__FILE__), "icons")
+    icon_path      = File.join(File.dirname(__FILE__), "icons")
     cmd.small_icon = File.join(icon_path, "icon_16.png")
     cmd.large_icon = File.join(icon_path, "icon_24.png")
 
