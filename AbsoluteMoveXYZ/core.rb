@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AbsoluteMoveXYZ
   PLUGIN_NAME = "Absolute Move XYZ"
 
@@ -15,27 +17,22 @@ module AbsoluteMoveXYZ
     end
   end
 
-  def self.axis_block(axis)
+  def self.axis_block(axis, anchors)
+    options_html = anchors.map do |val, label|
+      selected = val == anchors[anchors.size / 2][0] ? " selected" : ""
+      "<option value=\"#{val}\"#{selected}>#{label}</option>"
+    end.join("\n")
+
     <<-HTML
       <div class="row">
         <label class="axis-label">#{axis}:</label>
         <input type="number" id="#{axis.downcase}_value" value="0" step="any" class="num-input">
-        <select id="#{axis.downcase}_mode" class="mode-select">
-          <option value="absolute" selected>Absolute</option>
-          <option value="relative">Relative</option>
+        <select id="#{axis.downcase}_mode" class="mode-select-sm">
+          <option value="absolute" selected>Abs</option>
+          <option value="relative">Rel</option>
         </select>
-      </div>
-    HTML
-  end
-
-  def self.anchor_block
-    <<-HTML
-      <div class="row">
-        <label class="axis-label">Anchor:</label>
-        <select id="anchor" class="mode-select" style="flex:1;">
-          <option value="bottom">Bottom</option>
-          <option value="center" selected>Center</option>
-          <option value="top">Top</option>
+        <select id="#{axis.downcase}_anchor" class="mode-select">
+          #{options_html}
         </select>
       </div>
     HTML
@@ -49,8 +46,8 @@ module AbsoluteMoveXYZ
       preferences_key: "AbsoluteMoveXYZ",
       scrollable: false,
       resizable: false,
-      width: 340,
-      height: 310,
+      width: 380,
+      height: 290,
       style: UI::HtmlDialog::STYLE_DIALOG
     )
 
@@ -74,20 +71,21 @@ module AbsoluteMoveXYZ
           gap: 6px;
           margin-bottom: 8px;
         }
-        .axis-label  { width: 16px; font-weight: bold; flex-shrink: 0; }
-        .num-input   { width: 80px; padding: 3px 4px; box-sizing: border-box; }
-        .mode-select { flex: 1; padding: 3px 4px; }
-        .buttons     { display: flex; gap: 10px; margin-top: 14px; }
-        button       { flex: 1; height: 36px; font-size: 13px; cursor: pointer; }
-        #status      { margin-top: 8px; font-size: 11px; color: #666; min-height: 14px; }
+        .axis-label   { width: 16px; font-weight: bold; flex-shrink: 0; }
+        .num-input    { width: 75px; padding: 3px 4px; box-sizing: border-box; flex-shrink: 0; }
+        .mode-select-sm { width: 48px; padding: 3px 2px; flex-shrink: 0; }
+        .mode-select  { flex: 1; padding: 3px 4px; }
+        .buttons      { display: flex; gap: 10px; margin-top: 14px; }
+        button        { flex: 1; height: 36px; font-size: 13px; cursor: pointer; }
+        #status       { margin-top: 8px; font-size: 11px; color: #666; min-height: 14px; }
       </style>
       </head>
       <body>
         <h3>Absolute Coordinates</h3>
-        #{axis_block("X")}
-        #{axis_block("Y")}
-        #{axis_block("Z")}
-        #{anchor_block}
+
+        #{axis_block("X", [["left", "Left"], ["center", "Center"], ["right", "Right"]])}
+        #{axis_block("Y", [["front", "Front"], ["center", "Center"], ["rear", "Rear"]])}
+        #{axis_block("Z", [["bottom", "Bottom"], ["center", "Center"], ["top", "Top"]])}
 
         <div class="buttons">
           <button onclick="applyData(false)">Apply</button>
@@ -98,14 +96,16 @@ module AbsoluteMoveXYZ
         <script>
           function applyData(closeDialog) {
             const data = {
-              x:      document.getElementById("x_value").value,
-              x_mode: document.getElementById("x_mode").value,
-              y:      document.getElementById("y_value").value,
-              y_mode: document.getElementById("y_mode").value,
-              z:      document.getElementById("z_value").value,
-              z_mode: document.getElementById("z_mode").value,
-              anchor: document.getElementById("anchor").value,
-              close:  closeDialog
+              x:        document.getElementById("x_value").value,
+              x_mode:   document.getElementById("x_mode").value,
+              x_anchor: document.getElementById("x_anchor").value,
+              y:        document.getElementById("y_value").value,
+              y_mode:   document.getElementById("y_mode").value,
+              y_anchor: document.getElementById("y_anchor").value,
+              z:        document.getElementById("z_value").value,
+              z_mode:   document.getElementById("z_mode").value,
+              z_anchor: document.getElementById("z_anchor").value,
+              close:    closeDialog
             };
             document.getElementById("status").textContent = "Applying...";
             window.sketchup.apply(JSON.stringify(data));
@@ -158,20 +158,46 @@ module AbsoluteMoveXYZ
     end
   end
 
+  def self.anchor_point(bb, axis, anchor)
+    case axis
+    when :x
+      case anchor
+      when "left"   then bb.min.x
+      when "right"  then bb.max.x
+      else               (bb.min.x + bb.max.x) / 2.0
+      end
+    when :y
+      case anchor
+      when "front"  then bb.min.y
+      when "rear"   then bb.max.y
+      else               (bb.min.y + bb.max.y) / 2.0
+      end
+    when :z
+      case anchor
+      when "bottom" then bb.min.z
+      when "top"    then bb.max.z
+      else               (bb.min.z + bb.max.z) / 2.0
+      end
+    end
+  end
+
   def self.apply_move(data)
     model     = Sketchup.active_model
     selection = model.selection
     return if selection.empty?
 
-    ratio  = unit_ratio
-    x      = data["x"].to_f * ratio
-    y      = data["y"].to_f * ratio
-    z      = data["z"].to_f * ratio
-    anchor = data["anchor"] || "center"
+    ratio = unit_ratio
+    x     = data["x"].to_f * ratio
+    y     = data["y"].to_f * ratio
+    z     = data["z"].to_f * ratio
 
     x_relative = data["x_mode"] == "relative"
     y_relative = data["y_mode"] == "relative"
     z_relative = data["z_mode"] == "relative"
+
+    x_anchor = data["x_anchor"] || "center"
+    y_anchor = data["y_anchor"] || "center"
+    z_anchor = data["z_anchor"] || "center"
 
     entities = filter_top_level(selection.to_a)
 
@@ -185,22 +211,17 @@ module AbsoluteMoveXYZ
 
         bb = entity.bounds
 
-        # Точка привязки берётся из bounds — единая система для всех осей
-        anchor_x = (bb.min.x + bb.max.x) / 2.0
-        anchor_y = (bb.min.y + bb.max.y) / 2.0
-        anchor_z = case anchor
-                   when "bottom" then bb.min.z
-                   when "top"    then bb.max.z
-                   else               (bb.min.z + bb.max.z) / 2.0
-                   end
+        ax = anchor_point(bb, :x, x_anchor)
+        ay = anchor_point(bb, :y, y_anchor)
+        az = anchor_point(bb, :z, z_anchor)
 
-        target_x = x_relative ? anchor_x + x : x
-        target_y = y_relative ? anchor_y + y : y
-        target_z = z_relative ? anchor_z + z : z
+        target_x = x_relative ? ax + x : x
+        target_y = y_relative ? ay + y : y
+        target_z = z_relative ? az + z : z
 
-        dx = target_x - anchor_x
-        dy = target_y - anchor_y
-        dz = target_z - anchor_z
+        dx = target_x - ax
+        dy = target_y - ay
+        dz = target_z - az
 
         entity.transform!(Geom::Transformation.translation([dx, dy, dz]))
       end
