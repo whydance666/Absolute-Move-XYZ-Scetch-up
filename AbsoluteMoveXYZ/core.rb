@@ -71,13 +71,13 @@ module AbsoluteMoveXYZ
           gap: 6px;
           margin-bottom: 8px;
         }
-        .axis-label   { width: 16px; font-weight: bold; flex-shrink: 0; }
-        .num-input    { width: 75px; padding: 3px 4px; box-sizing: border-box; flex-shrink: 0; }
+        .axis-label     { width: 16px; font-weight: bold; flex-shrink: 0; }
+        .num-input      { width: 75px; padding: 3px 4px; box-sizing: border-box; flex-shrink: 0; }
         .mode-select-sm { width: 48px; padding: 3px 2px; flex-shrink: 0; }
-        .mode-select  { flex: 1; padding: 3px 4px; }
-        .buttons      { display: flex; gap: 10px; margin-top: 14px; }
-        button        { flex: 1; height: 36px; font-size: 13px; cursor: pointer; }
-        #status       { margin-top: 8px; font-size: 11px; color: #666; min-height: 14px; }
+        .mode-select    { flex: 1; padding: 3px 4px; }
+        .buttons        { display: flex; gap: 10px; margin-top: 14px; }
+        button          { flex: 1; height: 36px; font-size: 13px; cursor: pointer; }
+        #status         { margin-top: 8px; font-size: 11px; color: #666; min-height: 14px; }
       </style>
       </head>
       <body>
@@ -162,14 +162,14 @@ module AbsoluteMoveXYZ
     case axis
     when :x
       case anchor
-      when "left"   then bb.min.x
-      when "right"  then bb.max.x
+      when "left"   then bb.max.x
+      when "right"  then bb.min.x
       else               (bb.min.x + bb.max.x) / 2.0
       end
     when :y
       case anchor
-      when "front"  then bb.min.y
-      when "rear"   then bb.max.y
+      when "front"  then bb.max.y
+      when "rear"   then bb.min.y
       else               (bb.min.y + bb.max.y) / 2.0
       end
     when :z
