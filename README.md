@@ -1,4 +1,4 @@
-# 🧩 Absolute Move XYZ — SketchUp Plugin by whydance&Mike_iLeech
+# 🧩 Absolute Move XYZ — SketchUp Plugin by whydance&Mike_iLeech feat GKL0SS
 
 > Precise object positioning using absolute or relative XYZ coordinates with per-axis anchor point control.
 
@@ -404,5 +404,5 @@ Bounding box в SketchUp следует **мировой системе коор
 ---
 
 <div align="center">
-  <sub>Built with ❤️ by whydance&Mike_iLeech for SketchUp</sub>
+  <sub>Built with ❤️ by whydance&Mike_iLeech featuring GKL0SS for SketchUp</sub>
 </div>
