@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AbsoluteMoveXYZ
   PLUGIN_NAME = "Absolute Move XYZ"
   GITHUB_URL  = "https://github.com/whydance666"
@@ -179,10 +181,8 @@ module AbsoluteMoveXYZ
 
         body {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          font-size: 13px;
-          padding: 16px;
-          background: var(--bg);
-          color: var(--text);
+          font-size: 13px; padding: 16px;
+          background: var(--bg); color: var(--text);
           transition: background 0.2s, color 0.2s;
         }
 
@@ -219,19 +219,14 @@ module AbsoluteMoveXYZ
           align-items: center; gap: 8px;
           transition: background 0.2s, border-color 0.2s;
         }
-
         .current-state .cs-label {
           font-weight: 600; flex-shrink: 0;
           font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
         }
-
         .current-state .cs-values {
-          display: flex; gap: 10px;
-          flex-wrap: wrap; justify-content: flex-end;
+          display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
         }
-
         .current-state .cs-val { white-space: nowrap; }
-
         .current-state.empty {
           color: var(--text-muted); border-color: var(--border);
           background: var(--bg-section);
@@ -242,7 +237,6 @@ module AbsoluteMoveXYZ
           background: var(--bg-section); border: 1px solid var(--border);
           border-radius: 5px; padding: 10px 10px 4px; margin-bottom: 10px;
         }
-
         .section-title {
           font-size: 10px; font-weight: 600;
           text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;
@@ -255,14 +249,9 @@ module AbsoluteMoveXYZ
           margin-top: -4px; margin-bottom: 8px; font-style: italic;
         }
 
-        .row {
-          display: flex; align-items: center; gap: 6px; margin-bottom: 7px;
-        }
+        .row { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
 
-        .axis-label {
-          width: 14px; font-weight: 700; font-size: 12px; flex-shrink: 0;
-        }
-
+        .axis-label { width: 14px; font-weight: 700; font-size: 12px; flex-shrink: 0; }
         .section:nth-child(3) .axis-label { color: var(--text-axis); }
         .section:nth-child(4) .axis-label { color: var(--text-rot);  }
 
@@ -276,9 +265,7 @@ module AbsoluteMoveXYZ
         .num-input.invalid { border-color: var(--status-err); }
         .num-input::placeholder { color: var(--placeholder); font-style: italic; }
 
-        .unit-label {
-          font-size: 12px; color: var(--text-muted); flex-shrink: 0; width: 10px;
-        }
+        .unit-label { font-size: 12px; color: var(--text-muted); flex-shrink: 0; width: 10px; }
 
         .mode-select-sm {
           width: 50px; flex-shrink: 0; padding: 4px 3px;
@@ -286,14 +273,12 @@ module AbsoluteMoveXYZ
           border-radius: 3px; color: var(--text); font-size: 12px;
           outline: none; cursor: pointer;
         }
-
         .mode-select {
           flex: 1; padding: 4px 6px;
           background: var(--bg-input); border: 1px solid var(--border);
           border-radius: 3px; color: var(--text); font-size: 13px;
           outline: none; cursor: pointer;
         }
-
         select:focus { border-color: #007acc; }
 
         .buttons { display: flex; gap: 8px; margin-top: 4px; }
@@ -326,14 +311,11 @@ module AbsoluteMoveXYZ
         .footer {
           margin-top: 8px; padding-top: 8px;
           border-top: 1px solid var(--divider);
-          text-align: center; font-size: 10px;
-          color: var(--text-muted);
+          text-align: center; font-size: 10px; color: var(--text-muted);
           display: flex; justify-content: center;
           align-items: center; gap: 5px; flex-wrap: wrap;
         }
-        .footer a {
-          color: var(--link); text-decoration: none; transition: color 0.15s;
-        }
+        .footer a { color: var(--link); text-decoration: none; transition: color 0.15s; }
         .footer a:hover { color: var(--link-hv); }
         .footer-sep { color: var(--border); }
         .footer-testers { color: var(--text-muted); }
@@ -348,9 +330,7 @@ module AbsoluteMoveXYZ
           </button>
         </div>
 
-        <div class="current-state empty" id="current-state">
-          No selection
-        </div>
+        <div class="current-state empty" id="current-state">No selection</div>
 
         <div class="section">
           <div class="section-title move">⟷ Position</div>
@@ -406,14 +386,13 @@ module AbsoluteMoveXYZ
               '<span class="cs-val">Ry\u00a0' + state.ry + '\u00b0</span>' +
               '<span class="cs-val">Rz\u00a0' + state.rz + '\u00b0</span>' +
               '</span>';
-
             ["x","y","z"].forEach(function(ax) {
               const inp = document.getElementById(ax + "_value");
               if (inp && inp.value.trim() === "") inp.value = state[ax];
             });
-            [["rx","rx"],["ry","ry"],["rz","rz"]].forEach(function(pair) {
-              const inp = document.getElementById("r" + pair[0].slice(1) + "_value");
-              if (inp && inp.value.trim() === "") inp.value = state[pair[1]];
+            ["x","y","z"].forEach(function(ax) {
+              const inp = document.getElementById("r" + ax + "_value");
+              if (inp && inp.value.trim() === "") inp.value = state["r" + ax];
             });
           }
 
@@ -496,18 +475,9 @@ module AbsoluteMoveXYZ
       end
     end
 
-    @dialog.add_action_callback("requestCurrentState") do |_|
-      push_state.call
-    end
-
-    @dialog.add_action_callback("saveTheme") do |_, theme|
-      @current_theme = theme.to_sym
-    end
-
-    @dialog.add_action_callback("openUrl") do |_, url|
-      UI.openURL(url)
-    end
-
+    @dialog.add_action_callback("requestCurrentState") { |_| push_state.call }
+    @dialog.add_action_callback("saveTheme") { |_, theme| @current_theme = theme.to_sym }
+    @dialog.add_action_callback("openUrl")   { |_, url|   UI.openURL(url) }
     @dialog.add_action_callback("closeDialog") { |_| @dialog.close }
 
     @dialog.set_on_closed do
@@ -522,15 +492,9 @@ module AbsoluteMoveXYZ
     end
 
     @sel_observer = Class.new(Sketchup::SelectionObserver) do
-      def initialize(callback)
-        @callback = callback
-      end
-      def onSelectionBulkChange(_)
-        @callback.call
-      end
-      def onSelectionCleared(_)
-        @callback.call
-      end
+      def initialize(cb) ; @cb = cb ; end
+      def onSelectionBulkChange(_) ; @cb.call ; end
+      def onSelectionCleared(_)    ; @cb.call ; end
     end.new(push_state)
 
     Sketchup.active_model.selection.add_observer(@sel_observer)
@@ -547,11 +511,8 @@ module AbsoluteMoveXYZ
       UI.start_timer(0.3, false) do
         state = read_current_state
         if @dialog
-          if state
-            @dialog.execute_script("setCurrentState(#{state.to_json})")
-          else
-            @dialog.execute_script("setCurrentState(null)")
-          end
+          json = state ? "setCurrentState(#{state.to_json})" : "setCurrentState(null)"
+          @dialog.execute_script(json)
         end
       end
     end
@@ -662,18 +623,16 @@ module AbsoluteMoveXYZ
           delta_ry = target_ry - cur_ry
           delta_rz = target_rz - cur_rz
 
-          # ФИКС: применяем поворот только если есть реальное изменение
-          # и используем единую матрицу вместо трёх последовательных transform!
+          # Применяем только если есть реальное изменение — исключает самовращение
           tolerance = 1e-10
           if delta_rx.abs > tolerance || delta_ry.abs > tolerance || delta_rz.abs > tolerance
             rot_x = Geom::Transformation.rotation(center, [1, 0, 0], delta_rx)
             rot_y = Geom::Transformation.rotation(center, [0, 1, 0], delta_ry)
             rot_z = Geom::Transformation.rotation(center, [0, 0, 1], delta_rz)
 
-            # Единая матрица — исключает накопление ошибки
+            # Единая матрица — исключает накопление погрешности
             entity.transform!(rot_z * rot_y * rot_x)
 
-            # Пересчитываем после поворота
             bb = entity.bounds
             t  = entity.transformation
           end
@@ -690,11 +649,7 @@ module AbsoluteMoveXYZ
         target_y = y.nil? ? origin.y : (y_relative ? ay + y * ratio : y * ratio)
         target_z = z.nil? ? origin.z : (z_relative ? az + z * ratio : z * ratio)
 
-        dx = target_x - ax
-        dy = target_y - ay
-        dz = target_z - az
-
-        entity.transform!(Geom::Transformation.translation([dx, dy, dz]))
+        entity.transform!(Geom::Transformation.translation([target_x - ax, target_y - ay, target_z - az]))
       end
 
       model.commit_operation
