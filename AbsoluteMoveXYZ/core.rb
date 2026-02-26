@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# encoding: utf-8
 
 module AbsoluteMoveXYZ
   PLUGIN_NAME = "Absolute Move XYZ"
@@ -89,7 +90,7 @@ module AbsoluteMoveXYZ
       <div class="row">
         <label class="axis-label">#{axis}:</label>
         <input type="text" id="r#{axis.downcase}_value" class="num-input" autocomplete="off">
-        <label class="unit-label">°</label>
+        <label class="unit-label">&#176;</label>
         <select id="r#{axis.downcase}_mode" class="mode-select">
           <option value="absolute" selected>Absolute</option>
           <option value="relative">Relative</option>
@@ -102,11 +103,14 @@ module AbsoluteMoveXYZ
     <<-HTML
       <div class="footer">
         <span>made by <a href="#" onclick="window.sketchup.openUrl('#{GITHUB_URL}'); return false;">@whydance666</a></span>
-        <span class="footer-sep">·</span>
+        <span class="footer-sep">&middot;</span>
         <span class="footer-testers">tested by Mike_iLeech &amp; GKL0SS</span>
       </div>
     HTML
   end
+
+  ICON_SUN  = "&#9728;&#65039;"
+  ICON_MOON = "&#127769;"
 
   def self.create_dialog
     return @dialog if @dialog
@@ -120,6 +124,8 @@ module AbsoluteMoveXYZ
       height: 510,
       style: UI::HtmlDialog::STYLE_DIALOG
     )
+
+    initial_icon = @current_theme == :dark ? ICON_SUN : ICON_MOON
 
     html = <<-HTML
       <!DOCTYPE html>
@@ -325,15 +331,13 @@ module AbsoluteMoveXYZ
 
         <div class="header">
           <h3>Absolute Move XYZ</h3>
-          <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">
-            #{@current_theme == :dark ? "☀️" : "🌙"}
-          </button>
+          <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">#{initial_icon}</button>
         </div>
 
         <div class="current-state empty" id="current-state">No selection</div>
 
         <div class="section">
-          <div class="section-title move">⟷ Position</div>
+          <div class="section-title move">&#8596; Position</div>
           <div class="hint">Leave blank to keep current value</div>
           #{axis_block("X", [["left", "Left"], ["center", "Center"], ["right", "Right"]])}
           #{axis_block("Y", [["front", "Front"], ["center", "Center"], ["rear", "Rear"]])}
@@ -341,7 +345,7 @@ module AbsoluteMoveXYZ
         </div>
 
         <div class="section">
-          <div class="section-title rot">↻ Rotation</div>
+          <div class="section-title rot">&#8635; Rotation</div>
           <div class="hint">Leave blank to keep current value</div>
           #{rot_block("X")}
           #{rot_block("Y")}
@@ -357,19 +361,22 @@ module AbsoluteMoveXYZ
         #{footer_html}
 
         <script>
+          var ICON_SUN  = "&#9728;&#65039;";
+          var ICON_MOON = "&#127769;";
+
           function getValue(id) {
-            const el  = document.getElementById(id);
-            const raw = el.value.trim();
+            var el  = document.getElementById(id);
+            var raw = el.value.trim();
             if (raw === "") { el.classList.remove("invalid"); return ""; }
-            const val = raw.replace(",", ".");
-            const num = parseFloat(val);
+            var val = raw.replace(",", ".");
+            var num = parseFloat(val);
             if (isNaN(num)) { el.classList.add("invalid"); return null; }
             el.classList.remove("invalid");
             return String(num);
           }
 
           function setCurrentState(state) {
-            const el = document.getElementById("current-state");
+            var el = document.getElementById("current-state");
             if (!state) {
               el.className = "current-state empty";
               el.innerHTML = "No selection";
@@ -379,48 +386,48 @@ module AbsoluteMoveXYZ
             el.innerHTML =
               '<span class="cs-label">Current</span>' +
               '<span class="cs-values">' +
-              '<span class="cs-val">X\u00a0'  + state.x  + '</span>' +
-              '<span class="cs-val">Y\u00a0'  + state.y  + '</span>' +
-              '<span class="cs-val">Z\u00a0'  + state.z  + '</span>' +
-              '<span class="cs-val">Rx\u00a0' + state.rx + '\u00b0</span>' +
-              '<span class="cs-val">Ry\u00a0' + state.ry + '\u00b0</span>' +
-              '<span class="cs-val">Rz\u00a0' + state.rz + '\u00b0</span>' +
+              '<span class="cs-val">X&#160;'  + state.x  + '</span>' +
+              '<span class="cs-val">Y&#160;'  + state.y  + '</span>' +
+              '<span class="cs-val">Z&#160;'  + state.z  + '</span>' +
+              '<span class="cs-val">Rx&#160;' + state.rx + '&#176;</span>' +
+              '<span class="cs-val">Ry&#160;' + state.ry + '&#176;</span>' +
+              '<span class="cs-val">Rz&#160;' + state.rz + '&#176;</span>' +
               '</span>';
             ["x","y","z"].forEach(function(ax) {
-              const inp = document.getElementById(ax + "_value");
+              var inp = document.getElementById(ax + "_value");
               if (inp && inp.value.trim() === "") inp.value = state[ax];
             });
             ["x","y","z"].forEach(function(ax) {
-              const inp = document.getElementById("r" + ax + "_value");
+              var inp = document.getElementById("r" + ax + "_value");
               if (inp && inp.value.trim() === "") inp.value = state["r" + ax];
             });
           }
 
           function toggleTheme() {
-            const body = document.body;
-            const btn  = document.getElementById("theme-btn");
+            var body = document.body;
+            var btn  = document.getElementById("theme-btn");
             if (body.classList.contains("dark")) {
               body.classList.replace("dark", "light");
-              btn.textContent = "\uD83C\uDF19";
+              btn.innerHTML = ICON_MOON;
               window.sketchup.saveTheme("light");
             } else {
               body.classList.replace("light", "dark");
-              btn.textContent = "\u2600\uFE0F";
+              btn.innerHTML = ICON_SUN;
               window.sketchup.saveTheme("dark");
             }
           }
 
           function applyData(closeDialog) {
-            const status = document.getElementById("status");
-            const fields = ["x_value","y_value","z_value","rx_value","ry_value","rz_value"];
-            let valid = true;
+            var status = document.getElementById("status");
+            var fields = ["x_value","y_value","z_value","rx_value","ry_value","rz_value"];
+            var valid  = true;
             fields.forEach(function(id) { if (getValue(id) === null) valid = false; });
             if (!valid) {
               status.className = "error";
               status.textContent = "Invalid number format.";
               return;
             }
-            const data = {
+            var data = {
               x: getValue("x_value"), x_mode: document.getElementById("x_mode").value,
               x_anchor: document.getElementById("x_anchor").value,
               y: getValue("y_value"), y_mode: document.getElementById("y_mode").value,
@@ -438,13 +445,13 @@ module AbsoluteMoveXYZ
           }
 
           function onSuccess(msg) {
-            const s = document.getElementById("status");
+            var s = document.getElementById("status");
             s.className = ""; s.textContent = msg;
             window.sketchup.requestCurrentState();
           }
 
           function onError(msg) {
-            const s = document.getElementById("status");
+            var s = document.getElementById("status");
             s.className = "error"; s.textContent = "Error: " + msg;
           }
         </script>
@@ -530,8 +537,8 @@ module AbsoluteMoveXYZ
   def self.extract_euler(t)
     m   = t.to_a
     r00 = m[0];  r10 = m[4];  r20 = m[8]
-    r01 = m[1];  r11 = m[5];  r21 = m[9]
-    r02 = m[2];  r12 = m[6];  r22 = m[10]
+    r11 = m[5];  r21 = m[9]
+    r12 = m[6];  r22 = m[10]
 
     pitch = Math.atan2(-r20, Math.sqrt(r00**2 + r10**2))
     cos_p = Math.cos(pitch)
@@ -623,14 +630,12 @@ module AbsoluteMoveXYZ
           delta_ry = target_ry - cur_ry
           delta_rz = target_rz - cur_rz
 
-          # Применяем только если есть реальное изменение — исключает самовращение
           tolerance = 1e-10
           if delta_rx.abs > tolerance || delta_ry.abs > tolerance || delta_rz.abs > tolerance
             rot_x = Geom::Transformation.rotation(center, [1, 0, 0], delta_rx)
             rot_y = Geom::Transformation.rotation(center, [0, 1, 0], delta_ry)
             rot_z = Geom::Transformation.rotation(center, [0, 0, 1], delta_rz)
 
-            # Единая матрица — исключает накопление погрешности
             entity.transform!(rot_z * rot_y * rot_x)
 
             bb = entity.bounds
