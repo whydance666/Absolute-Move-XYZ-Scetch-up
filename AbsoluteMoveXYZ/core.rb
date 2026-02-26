@@ -119,9 +119,9 @@ module AbsoluteMoveXYZ
       dialog_title: PLUGIN_NAME,
       preferences_key: "AbsoluteMoveXYZ",
       scrollable: false,
-      resizable: false,
+      resizable: true,
       width: 390,
-      height: 510,
+      height: 480,
       style: UI::HtmlDialog::STYLE_DIALOG
     )
 
@@ -151,6 +151,9 @@ module AbsoluteMoveXYZ
           --btn-apply-hv:  #3a3a3a;
           --btn-ok-bg:     #007acc;
           --btn-ok-hv:     #1a8ad4;
+          --btn-reset-bg:  #3a2020;
+          --btn-reset-hv:  #4a2828;
+          --btn-reset-cl:  #f44747;
           --status-ok:     #6a9955;
           --status-err:    #f44747;
           --link:          #4e7fa8;
@@ -158,6 +161,8 @@ module AbsoluteMoveXYZ
           --current-bg:    #1a2a1a;
           --current-border:#2e5a2e;
           --current-text:  #4e8a4e;
+          --scrollbar-bg:  #2d2d2d;
+          --scrollbar-th:  #555555;
         }
 
         body.light {
@@ -176,6 +181,9 @@ module AbsoluteMoveXYZ
           --btn-apply-hv:  #e0e0e0;
           --btn-ok-bg:     #007acc;
           --btn-ok-hv:     #1a8ad4;
+          --btn-reset-bg:  #fdecea;
+          --btn-reset-hv:  #fad4d0;
+          --btn-reset-cl:  #cc0000;
           --status-ok:     #3a7a3a;
           --status-err:    #cc0000;
           --link:          #0066aa;
@@ -183,26 +191,63 @@ module AbsoluteMoveXYZ
           --current-bg:    #e8f5e8;
           --current-border:#5aaa5a;
           --current-text:  #2e7a2e;
+          --scrollbar-bg:  #eeeeee;
+          --scrollbar-th:  #bbbbbb;
+        }
+
+        html, body {
+          height: 100%;
+          overflow: hidden;
         }
 
         body {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          font-size: 13px; padding: 16px;
-          background: var(--bg); color: var(--text);
+          font-size: 13px;
+          background: var(--bg);
+          color: var(--text);
           transition: background 0.2s, color 0.2s;
+          display: flex;
+          flex-direction: column;
         }
 
-        .header {
-          display: flex; align-items: center;
+        /* ── Шапка — фиксированная ── */
+        .topbar {
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
           justify-content: space-between;
-          margin-bottom: 10px; padding-bottom: 8px;
+          padding: 10px 16px 8px;
           border-bottom: 1px solid var(--divider);
+          background: var(--bg);
         }
 
-        h3 {
-          font-size: 13px; font-weight: 600;
-          color: var(--text-head);
-          text-transform: uppercase; letter-spacing: 0.08em;
+        .current-state {
+          flex: 1;
+          background: var(--current-bg);
+          border: 1px solid var(--current-border);
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-size: 11px;
+          color: var(--current-text);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 6px;
+          transition: background 0.2s, border-color 0.2s;
+          margin-right: 8px;
+        }
+        .current-state .cs-label {
+          font-weight: 600; flex-shrink: 0;
+          font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .current-state .cs-values {
+          display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
+        }
+        .current-state .cs-val { white-space: nowrap; }
+        .current-state.empty {
+          color: var(--text-muted); border-color: var(--border);
+          background: var(--bg-section);
+          font-style: italic; justify-content: center;
         }
 
         .theme-btn {
@@ -215,28 +260,26 @@ module AbsoluteMoveXYZ
         .theme-btn:hover  { background: var(--btn-apply-hv); }
         .theme-btn:active { transform: scale(0.95); }
 
-        .current-state {
-          background: var(--current-bg);
-          border: 1px solid var(--current-border);
-          border-radius: 4px; padding: 6px 10px;
-          margin-bottom: 10px; font-size: 11px;
-          color: var(--current-text);
-          display: flex; justify-content: space-between;
-          align-items: center; gap: 8px;
-          transition: background 0.2s, border-color 0.2s;
+        /* ── Скроллируемая область ── */
+        .scroll-area {
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          padding: 12px 16px 8px;
         }
-        .current-state .cs-label {
-          font-weight: 600; flex-shrink: 0;
-          font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+
+        .scroll-area::-webkit-scrollbar {
+          width: 6px;
         }
-        .current-state .cs-values {
-          display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
+        .scroll-area::-webkit-scrollbar-track {
+          background: var(--scrollbar-bg);
         }
-        .current-state .cs-val { white-space: nowrap; }
-        .current-state.empty {
-          color: var(--text-muted); border-color: var(--border);
-          background: var(--bg-section);
-          font-style: italic; justify-content: center;
+        .scroll-area::-webkit-scrollbar-thumb {
+          background: var(--scrollbar-th);
+          border-radius: 3px;
+        }
+        .scroll-area::-webkit-scrollbar-thumb:hover {
+          background: var(--text-muted);
         }
 
         .section {
@@ -258,8 +301,8 @@ module AbsoluteMoveXYZ
         .row { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
 
         .axis-label { width: 14px; font-weight: 700; font-size: 12px; flex-shrink: 0; }
-        .section:nth-child(3) .axis-label { color: var(--text-axis); }
-        .section:nth-child(4) .axis-label { color: var(--text-rot);  }
+        .section:nth-child(1) .axis-label { color: var(--text-axis); }
+        .section:nth-child(2) .axis-label { color: var(--text-rot);  }
 
         .num-input {
           width: 72px; padding: 4px 6px; flex-shrink: 0;
@@ -287,7 +330,15 @@ module AbsoluteMoveXYZ
         }
         select:focus { border-color: #007acc; }
 
-        .buttons { display: flex; gap: 8px; margin-top: 4px; }
+        /* ── Нижняя панель — фиксированная ── */
+        .bottom-bar {
+          flex-shrink: 0;
+          padding: 8px 16px 10px;
+          border-top: 1px solid var(--divider);
+          background: var(--bg);
+        }
+
+        .buttons { display: flex; gap: 8px; margin-bottom: 6px; }
 
         button {
           flex: 1; height: 34px; font-size: 13px; font-weight: 500;
@@ -308,15 +359,22 @@ module AbsoluteMoveXYZ
         }
         .btn-ok:hover { background: var(--btn-ok-hv); }
 
+        .btn-reset {
+          background: var(--btn-reset-bg); color: var(--btn-reset-cl);
+          border: 1px solid var(--btn-reset-cl);
+          font-size: 12px;
+          height: 28px;
+        }
+        .btn-reset:hover { background: var(--btn-reset-hv); }
+
         #status {
-          margin-top: 8px; font-size: 11px; color: var(--status-ok);
+          font-size: 11px; color: var(--status-ok);
           min-height: 14px; text-align: center; transition: color 0.15s;
+          margin-bottom: 6px;
         }
         #status.error { color: var(--status-err); }
 
         .footer {
-          margin-top: 8px; padding-top: 8px;
-          border-top: 1px solid var(--divider);
           text-align: center; font-size: 10px; color: var(--text-muted);
           display: flex; justify-content: center;
           align-items: center; gap: 5px; flex-wrap: wrap;
@@ -329,40 +387,59 @@ module AbsoluteMoveXYZ
       </head>
       <body class="#{@current_theme}">
 
-        <div class="header">
-          <h3>Absolute Move XYZ</h3>
+        <!-- Фиксированная шапка -->
+        <div class="topbar">
+          <div class="current-state empty" id="current-state">No selection</div>
           <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">#{initial_icon}</button>
         </div>
 
-        <div class="current-state empty" id="current-state">No selection</div>
+        <!-- Скроллируемая область -->
+        <div class="scroll-area">
 
-        <div class="section">
-          <div class="section-title move">&#8596; Position</div>
-          <div class="hint">Leave blank to keep current value</div>
-          #{axis_block("X", [["left", "Left"], ["center", "Center"], ["right", "Right"]])}
-          #{axis_block("Y", [["front", "Front"], ["center", "Center"], ["rear", "Rear"]])}
-          #{axis_block("Z", [["bottom", "Bottom"], ["center", "Center"], ["top", "Top"]])}
+          <div class="section">
+            <div class="section-title move">&#8596; Position</div>
+            <div class="hint">Leave blank to keep current value</div>
+            #{axis_block("X", [["left", "Left"], ["center", "Center"], ["right", "Right"]])}
+            #{axis_block("Y", [["front", "Front"], ["center", "Center"], ["rear", "Rear"]])}
+            #{axis_block("Z", [["bottom", "Bottom"], ["center", "Center"], ["top", "Top"]])}
+          </div>
+
+          <div class="section">
+            <div class="section-title rot">&#8635; Rotation</div>
+            <div class="hint">Leave blank to keep current value</div>
+            #{rot_block("X")}
+            #{rot_block("Y")}
+            #{rot_block("Z")}
+          </div>
+
         </div>
 
-        <div class="section">
-          <div class="section-title rot">&#8635; Rotation</div>
-          <div class="hint">Leave blank to keep current value</div>
-          #{rot_block("X")}
-          #{rot_block("Y")}
-          #{rot_block("Z")}
+        <!-- Фиксированная нижняя панель -->
+        <div class="bottom-bar">
+          <div class="buttons">
+            <button class="btn-apply" onclick="applyData(false)">Apply</button>
+            <button class="btn-ok"    onclick="applyData(true)">OK</button>
+          </div>
+          <button class="btn-reset" onclick="resetAll()" style="width:100%;">&#8635; Reset all parameters</button>
+          <div id="status"></div>
+          #{footer_html}
         </div>
-
-        <div class="buttons">
-          <button class="btn-apply" onclick="applyData(false)">Apply</button>
-          <button class="btn-ok"    onclick="applyData(true)">OK</button>
-        </div>
-
-        <div id="status"></div>
-        #{footer_html}
 
         <script>
           var ICON_SUN  = "&#9728;&#65039;";
           var ICON_MOON = "&#127769;";
+
+          var DEFAULT_ANCHORS = {
+            x_anchor: "center",
+            y_anchor: "center",
+            z_anchor: "center",
+            rx_mode:  "absolute",
+            ry_mode:  "absolute",
+            rz_mode:  "absolute",
+            x_mode:   "absolute",
+            y_mode:   "absolute",
+            z_mode:   "absolute"
+          };
 
           function getValue(id) {
             var el  = document.getElementById(id);
@@ -373,6 +450,28 @@ module AbsoluteMoveXYZ
             if (isNaN(num)) { el.classList.add("invalid"); return null; }
             el.classList.remove("invalid");
             return String(num);
+          }
+
+          function resetAll() {
+            // Очищаем все числовые поля
+            var inputs = ["x_value","y_value","z_value","rx_value","ry_value","rz_value"];
+            inputs.forEach(function(id) {
+              var el = document.getElementById(id);
+              if (el) { el.value = ""; el.classList.remove("invalid"); }
+            });
+
+            // Сбрасываем все селекты к дефолтам
+            Object.keys(DEFAULT_ANCHORS).forEach(function(id) {
+              var el = document.getElementById(id);
+              if (el) el.value = DEFAULT_ANCHORS[id];
+            });
+
+            // Очищаем статус
+            var s = document.getElementById("status");
+            s.className = ""; s.textContent = "";
+
+            // Подставляем текущие значения объекта если есть
+            window.sketchup.requestCurrentState();
           }
 
           function setCurrentState(state) {
