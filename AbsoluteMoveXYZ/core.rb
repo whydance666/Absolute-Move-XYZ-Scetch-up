@@ -14,7 +14,6 @@ module AbsoluteMoveXYZ
   def self.unit_ratio
     options   = Sketchup.active_model.options["UnitsOptions"]
     unit_type = options["LengthUnit"]
-
     case unit_type
     when 0 then 1.0
     when 1 then 12.0
@@ -69,7 +68,6 @@ module AbsoluteMoveXYZ
       selected = val == anchors[anchors.size / 2][0] ? " selected" : ""
       "<option value=\"#{val}\"#{selected}>#{label}</option>"
     end.join("\n")
-
     <<-HTML
       <div class="row">
         <label class="axis-label">#{axis}:</label>
@@ -195,26 +193,17 @@ module AbsoluteMoveXYZ
           --scrollbar-th:  #bbbbbb;
         }
 
-        html, body {
-          height: 100%;
-          overflow: hidden;
-        }
+        html, body { height: 100%; overflow: hidden; }
 
         body {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          font-size: 13px;
-          background: var(--bg);
-          color: var(--text);
+          font-size: 13px; background: var(--bg); color: var(--text);
           transition: background 0.2s, color 0.2s;
-          display: flex;
-          flex-direction: column;
+          display: flex; flex-direction: column;
         }
 
-        /* ── Шапка — фиксированная ── */
         .topbar {
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
+          flex-shrink: 0; display: flex; align-items: center;
           justify-content: space-between;
           padding: 10px 16px 8px;
           border-bottom: 1px solid var(--divider);
@@ -222,17 +211,12 @@ module AbsoluteMoveXYZ
         }
 
         .current-state {
-          flex: 1;
-          background: var(--current-bg);
+          flex: 1; background: var(--current-bg);
           border: 1px solid var(--current-border);
-          border-radius: 4px;
-          padding: 4px 8px;
-          font-size: 11px;
-          color: var(--current-text);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 6px;
+          border-radius: 4px; padding: 4px 8px;
+          font-size: 11px; color: var(--current-text);
+          display: flex; justify-content: space-between;
+          align-items: center; gap: 6px;
           transition: background 0.2s, border-color 0.2s;
           margin-right: 8px;
         }
@@ -260,27 +244,13 @@ module AbsoluteMoveXYZ
         .theme-btn:hover  { background: var(--btn-apply-hv); }
         .theme-btn:active { transform: scale(0.95); }
 
-        /* ── Скроллируемая область ── */
         .scroll-area {
-          flex: 1;
-          overflow-y: auto;
-          overflow-x: hidden;
-          padding: 12px 16px 8px;
+          flex: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 16px 8px;
         }
-
-        .scroll-area::-webkit-scrollbar {
-          width: 6px;
-        }
-        .scroll-area::-webkit-scrollbar-track {
-          background: var(--scrollbar-bg);
-        }
-        .scroll-area::-webkit-scrollbar-thumb {
-          background: var(--scrollbar-th);
-          border-radius: 3px;
-        }
-        .scroll-area::-webkit-scrollbar-thumb:hover {
-          background: var(--text-muted);
-        }
+        .scroll-area::-webkit-scrollbar { width: 6px; }
+        .scroll-area::-webkit-scrollbar-track { background: var(--scrollbar-bg); }
+        .scroll-area::-webkit-scrollbar-thumb { background: var(--scrollbar-th); border-radius: 3px; }
+        .scroll-area::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
         .section {
           background: var(--bg-section); border: 1px solid var(--border);
@@ -330,12 +300,9 @@ module AbsoluteMoveXYZ
         }
         select:focus { border-color: #007acc; }
 
-        /* ── Нижняя панель — фиксированная ── */
         .bottom-bar {
-          flex-shrink: 0;
-          padding: 8px 16px 10px;
-          border-top: 1px solid var(--divider);
-          background: var(--bg);
+          flex-shrink: 0; padding: 8px 16px 10px;
+          border-top: 1px solid var(--divider); background: var(--bg);
         }
 
         .buttons { display: flex; gap: 8px; margin-bottom: 6px; }
@@ -362,15 +329,14 @@ module AbsoluteMoveXYZ
         .btn-reset {
           background: var(--btn-reset-bg); color: var(--btn-reset-cl);
           border: 1px solid var(--btn-reset-cl);
-          font-size: 12px;
-          height: 28px;
+          font-size: 12px; height: 28px;
         }
         .btn-reset:hover { background: var(--btn-reset-hv); }
 
         #status {
           font-size: 11px; color: var(--status-ok);
-          min-height: 14px; text-align: center; transition: color 0.15s;
-          margin-bottom: 6px;
+          min-height: 14px; text-align: center;
+          transition: color 0.15s; margin-bottom: 6px;
         }
         #status.error { color: var(--status-err); }
 
@@ -387,15 +353,12 @@ module AbsoluteMoveXYZ
       </head>
       <body class="#{@current_theme}">
 
-        <!-- Фиксированная шапка -->
         <div class="topbar">
           <div class="current-state empty" id="current-state">No selection</div>
           <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">#{initial_icon}</button>
         </div>
 
-        <!-- Скроллируемая область -->
         <div class="scroll-area">
-
           <div class="section">
             <div class="section-title move">&#8596; Position</div>
             <div class="hint">Leave blank to keep current value</div>
@@ -411,10 +374,8 @@ module AbsoluteMoveXYZ
             #{rot_block("Y")}
             #{rot_block("Z")}
           </div>
-
         </div>
 
-        <!-- Фиксированная нижняя панель -->
         <div class="bottom-bar">
           <div class="buttons">
             <button class="btn-apply" onclick="applyData(false)">Apply</button>
@@ -429,18 +390,6 @@ module AbsoluteMoveXYZ
           var ICON_SUN  = "&#9728;&#65039;";
           var ICON_MOON = "&#127769;";
 
-          var DEFAULT_ANCHORS = {
-            x_anchor: "center",
-            y_anchor: "center",
-            z_anchor: "center",
-            rx_mode:  "absolute",
-            ry_mode:  "absolute",
-            rz_mode:  "absolute",
-            x_mode:   "absolute",
-            y_mode:   "absolute",
-            z_mode:   "absolute"
-          };
-
           function getValue(id) {
             var el  = document.getElementById(id);
             var raw = el.value.trim();
@@ -452,26 +401,25 @@ module AbsoluteMoveXYZ
             return String(num);
           }
 
+          // ФИКС: reset только очищает поля и сбрасывает селекты
+          // НЕ вызывает requestCurrentState — поля остаются пустыми
           function resetAll() {
-            // Очищаем все числовые поля
             var inputs = ["x_value","y_value","z_value","rx_value","ry_value","rz_value"];
             inputs.forEach(function(id) {
               var el = document.getElementById(id);
               if (el) { el.value = ""; el.classList.remove("invalid"); }
             });
-
-            // Сбрасываем все селекты к дефолтам
-            Object.keys(DEFAULT_ANCHORS).forEach(function(id) {
+            var selects = {
+              "x_mode": "absolute", "y_mode": "absolute", "z_mode": "absolute",
+              "x_anchor": "center", "y_anchor": "center",  "z_anchor": "center",
+              "rx_mode": "absolute", "ry_mode": "absolute", "rz_mode": "absolute"
+            };
+            Object.keys(selects).forEach(function(id) {
               var el = document.getElementById(id);
-              if (el) el.value = DEFAULT_ANCHORS[id];
+              if (el) el.value = selects[id];
             });
-
-            // Очищаем статус
             var s = document.getElementById("status");
             s.className = ""; s.textContent = "";
-
-            // Подставляем текущие значения объекта если есть
-            window.sketchup.requestCurrentState();
           }
 
           function setCurrentState(state) {
@@ -492,6 +440,7 @@ module AbsoluteMoveXYZ
               '<span class="cs-val">Ry&#160;' + state.ry + '&#176;</span>' +
               '<span class="cs-val">Rz&#160;' + state.rz + '&#176;</span>' +
               '</span>';
+            // Подставляем значения только в пустые поля
             ["x","y","z"].forEach(function(ax) {
               var inp = document.getElementById(ax + "_value");
               if (inp && inp.value.trim() === "") inp.value = state[ax];
@@ -717,25 +666,52 @@ module AbsoluteMoveXYZ
 
         # ── ПОВОРОТ ──
         if rx_deg || ry_deg || rz_deg
-          center = bb.center
-          cur_rx, cur_ry, cur_rz = extract_euler(t)
+          center  = bb.center
           deg2rad = Math::PI / 180.0
 
-          target_rx = rx_deg.nil? ? cur_rx : (rx_relative ? cur_rx + rx_deg * deg2rad : rx_deg * deg2rad)
-          target_ry = ry_deg.nil? ? cur_ry : (ry_relative ? cur_ry + ry_deg * deg2rad : ry_deg * deg2rad)
-          target_rz = rz_deg.nil? ? cur_rz : (rz_relative ? cur_rz + rz_deg * deg2rad : rz_deg * deg2rad)
+          if rx_relative || ry_relative || rz_relative
+            # Relative: считаем delta и применяем
+            cur_rx, cur_ry, cur_rz = extract_euler(t)
 
-          delta_rx = target_rx - cur_rx
-          delta_ry = target_ry - cur_ry
-          delta_rz = target_rz - cur_rz
+            delta_rx = rx_deg && rx_relative  ? rx_deg * deg2rad : 0.0
+            delta_ry = ry_deg && ry_relative  ? ry_deg * deg2rad : 0.0
+            delta_rz = rz_deg && rz_relative  ? rz_deg * deg2rad : 0.0
 
-          tolerance = 1e-10
-          if delta_rx.abs > tolerance || delta_ry.abs > tolerance || delta_rz.abs > tolerance
-            rot_x = Geom::Transformation.rotation(center, [1, 0, 0], delta_rx)
-            rot_y = Geom::Transformation.rotation(center, [0, 1, 0], delta_ry)
-            rot_z = Geom::Transformation.rotation(center, [0, 0, 1], delta_rz)
+            tolerance = 1e-10
+            if delta_rx.abs > tolerance || delta_ry.abs > tolerance || delta_rz.abs > tolerance
+              rot_x = Geom::Transformation.rotation(center, [1, 0, 0], delta_rx)
+              rot_y = Geom::Transformation.rotation(center, [0, 1, 0], delta_ry)
+              rot_z = Geom::Transformation.rotation(center, [0, 0, 1], delta_rz)
+              entity.transform!(rot_z * rot_y * rot_x)
+              bb = entity.bounds
+              t  = entity.transformation
+            end
+          else
+            # ФИКС Absolute: полностью пересобираем трансформацию с нуля
+            # Берём текущий масштаб и позицию, заменяем только rotation
+            cur_rx, cur_ry, cur_rz = extract_euler(t)
 
-            entity.transform!(rot_z * rot_y * rot_x)
+            target_rx = rx_deg ? rx_deg * deg2rad : cur_rx
+            target_ry = ry_deg ? ry_deg * deg2rad : cur_ry
+            target_rz = rz_deg ? rz_deg * deg2rad : cur_rz
+
+            # Строим чистую rotation матрицу через три оси
+            # Сначала сбрасываем rotation объекта до нуля, потом применяем нужный угол
+            # Получаем текущий scale из трансформации
+            sx = Math.sqrt(t.to_a[0]**2 + t.to_a[4]**2 + t.to_a[8]**2)
+            sy = Math.sqrt(t.to_a[1]**2 + t.to_a[5]**2 + t.to_a[9]**2)
+            sz = Math.sqrt(t.to_a[2]**2 + t.to_a[6]**2 + t.to_a[10]**2)
+
+            # Трансформация: сброс к identity rotation вокруг center, затем новый поворот
+            reset_rot = Geom::Transformation.rotation(center, [1,0,0], -cur_rx) *
+                        Geom::Transformation.rotation(center, [0,1,0], -cur_ry) *
+                        Geom::Transformation.rotation(center, [0,0,1], -cur_rz)
+
+            new_rot   = Geom::Transformation.rotation(center, [0,0,1], target_rz) *
+                        Geom::Transformation.rotation(center, [0,1,0], target_ry) *
+                        Geom::Transformation.rotation(center, [1,0,0], target_rx)
+
+            entity.transform!(new_rot * reset_rot)
 
             bb = entity.bounds
             t  = entity.transformation
